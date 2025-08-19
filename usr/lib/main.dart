@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -7,114 +9,134 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Currency Rate App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.indigo,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const CurrencyListScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class CurrencyListScreen extends StatefulWidget {
+  const CurrencyListScreen({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<CurrencyListScreen> createState() => _CurrencyListScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _CurrencyListScreenState extends State<CurrencyListScreen> {
+  Future<Map<String, dynamic>>? futureRates;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    futureRates = fetchRates();
+  }
+
+  Future<Map<String, dynamic>> fetchRates() async {
+    // NOTE: This is a free API endpoint. For production apps, consider a more robust solution.
+    const apiKey = "YOUR_API_KEY"; // Replace with a real API key from a provider
+    final url = Uri.parse('https://v6.exchangerate-api.com/v6/$apiKey/latest/USD');
+    
+    // A mock response for demonstration purposes in case the API fails or is not available.
+    const mockResponse = '''
+    {
+      "result": "success",
+      "documentation": "https://www.exchangerate-api.com/docs",
+      "terms_of_use": "https://www.exchangerate-api.com/terms",
+      "time_last_update_unix": 1672531201,
+      "time_last_update_utc": "Sun, 01 Jan 2023 00:00:01 +0000",
+      "time_next_update_unix": 1672617601,
+      "time_next_update_utc": "Mon, 02 Jan 2023 00:00:01 +0000",
+      "base_code": "USD",
+      "conversion_rates": {
+        "USD": 1,
+        "EUR": 0.93,
+        "GBP": 0.82,
+        "JPY": 130.87,
+        "AUD": 1.48,
+        "CAD": 1.36,
+        "CHF": 0.92,
+        "CNY": 6.89,
+        "SEK": 10.45,
+        "NZD": 1.59
+      }
+    }
+    ''';
+
+    try {
+      // final response = await http.get(url);
+      // if (response.statusCode == 200) {
+      //   return json.decode(response.body)['conversion_rates'];
+      // } else {
+      //   // If the server did not return a 200 OK response,
+      //   // then throw an exception.
+      //   throw Exception('Failed to load currency rates');
+      // }
+      
+      // Using mock data directly for this example
+      return json.decode(mockResponse)['conversion_rates'];
+
+    } catch (e) {
+      // If there's an error in the request, fall back to mock data.
+      return json.decode(mockResponse)['conversion_rates'];
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Currency Rates (Base: USD)'),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text('$_counter', style: Theme.of(context).textTheme.headlineMedium),
-          ],
-        ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: futureRates,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (snapshot.hasData) {
+            final rates = snapshot.data!;
+            final currencies = rates.keys.toList();
+            return ListView.builder(
+              itemCount: currencies.length,
+              itemBuilder: (context, index) {
+                final currency = currencies[index];
+                final rate = rates[currency];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Theme.of(context).primaryColorLight,
+                      child: Text(
+                        currency.substring(0, 1),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColorDark,
+                        ),
+                      ),
+                    ),
+                    title: Text(currency, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    trailing: Text(
+                      rate.toStringAsFixed(4),
+                      style: const TextStyle(fontSize: 16, color: Colors.green),
+                    ),
+                  ),
+                );
+              },
+            );
+          } else {
+            return const Center(child: Text('No data available'));
+          }
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
